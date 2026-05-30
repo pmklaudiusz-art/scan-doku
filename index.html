@@ -14,7 +14,31 @@
       flex-direction: column;
       align-items: center;
       padding: 20px 16px;
+      padding-right: 64px;
     }
+
+    /* Scrollbar 1cm po prawej */
+    #scrollbar {
+      position: fixed;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 38px;
+      background: #e4e6ed;
+      z-index: 100;
+      cursor: pointer;
+    }
+    #scrollthumb {
+      position: absolute;
+      left: 4px;
+      right: 4px;
+      background: #4361ee;
+      border-radius: 6px;
+      min-height: 40px;
+      transition: top 0.05s, height 0.05s;
+      cursor: grab;
+    }
+    #scrollthumb:active { cursor: grabbing; background: #2541c4; }
     h1 { font-size: 1.5rem; color: #1a1a2e; margin-bottom: 2px; }
     .subtitle { color: #888; font-size: 0.85rem; margin-bottom: 24px; }
     .card {
@@ -115,11 +139,15 @@
   </style>
 </head>
 <body>
+<div id="scrollbar">
+  <div id="scrollthumb"></div>
+</div>
+
 <h1>📄 SkanDoku</h1>
 <p class="subtitle">Zdjęcie dokumentu → gotowy skan</p>
 
 <!-- KROK 1 -->
-<div class="card">
+<div class="card" id="step1">
   <div class="step-label">Krok 1 — Zrób zdjęcie</div>
   <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">📷 Zrób zdjęcie / wybierz plik</button>
   <input type="file" id="fileInput" accept="image/*" capture="environment" onchange="onFileLoad(event)" />
@@ -163,6 +191,59 @@
 </div>
 
 <script>
+// ─── Scrollbar ───────────────────────────────────────────
+const bar   = document.getElementById('scrollbar');
+const thumb = document.getElementById('scrollthumb');
+let draggingBar = false, dragStartY = 0, dragStartScroll = 0;
+
+function updateThumb() {
+  const barH    = bar.clientHeight;
+  const docH    = document.documentElement.scrollHeight;
+  const scrollY = window.scrollY;
+  const ratio   = docH > barH ? barH / docH : 1;
+  const thumbH  = Math.max(40, barH * ratio);
+  const thumbTop = (scrollY / (docH - barH)) * (barH - thumbH);
+  thumb.style.height = thumbH + 'px';
+  thumb.style.top    = (isNaN(thumbTop) ? 0 : thumbTop) + 'px';
+}
+
+window.addEventListener('scroll', updateThumb, {passive: true});
+window.addEventListener('resize', updateThumb);
+updateThumb();
+
+// Kliknięcie na pasek — skocz do pozycji
+bar.addEventListener('click', e => {
+  if (e.target === thumb) return;
+  const rect    = bar.getBoundingClientRect();
+  const clickY  = e.clientY - rect.top;
+  const barH    = bar.clientHeight;
+  const docH    = document.documentElement.scrollHeight;
+  window.scrollTo({ top: (clickY / barH) * docH, behavior: 'smooth' });
+});
+
+// Przeciąganie kciuka
+thumb.addEventListener('mousedown',  e => { draggingBar = true; dragStartY = e.clientY; dragStartScroll = window.scrollY; e.preventDefault(); });
+thumb.addEventListener('touchstart', e => { draggingBar = true; dragStartY = e.touches[0].clientY; dragStartScroll = window.scrollY; }, {passive:true});
+
+window.addEventListener('mousemove', e => {
+  if (!draggingBar) return;
+  const dy   = e.clientY - dragStartY;
+  const docH = document.documentElement.scrollHeight;
+  const barH = bar.clientHeight;
+  window.scrollTo(0, dragStartScroll + (dy / barH) * docH);
+});
+window.addEventListener('touchmove', e => {
+  if (!draggingBar) return;
+  const dy   = e.touches[0].clientY - dragStartY;
+  const docH = document.documentElement.scrollHeight;
+  const barH = bar.clientHeight;
+  window.scrollTo(0, dragStartScroll + (dy / barH) * docH);
+}, {passive:true});
+window.addEventListener('mouseup',  () => { draggingBar = false; });
+window.addEventListener('touchend', () => { draggingBar = false; });
+
+function updateStepbar() {} // zachowane dla kompatybilności
+
 // ─── Stan ───────────────────────────────────────────────
 let origImg = null;       // HTMLImageElement
 let warpedCanvas = null;  // canvas po perspective warp
@@ -184,6 +265,7 @@ function onFileLoad(e) {
       document.getElementById('step3').style.display = 'none';
       document.getElementById('step4').style.display = 'none';
       document.getElementById('scanWrap').style.display = 'none';
+      updateStepbar(2);
       resizeCornerCanvas();
       document.getElementById('spin1').style.display = 'block';
       setTimeout(() => {
@@ -390,6 +472,7 @@ function processAndScan() {
     document.getElementById('spin2').style.display = 'none';
     document.getElementById('scanWrap').style.display = 'block';
     document.getElementById('step3').scrollIntoView({behavior:'smooth'});
+    updateStepbar(3);
   }, 60);
 }
 
@@ -547,6 +630,7 @@ function downloadScan() {
 }
 
 async function sendWhatsApp() {
+  updateStepbar(4);
   const canvas = document.getElementById('scanCanvas');
   const date = new Date().toLocaleDateString('pl');
 
