@@ -1,0 +1,9 @@
+# System
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# Edytory
+.vscode/
+*.suo
+*.user
