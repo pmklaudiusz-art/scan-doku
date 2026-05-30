@@ -176,58 +176,27 @@
 </div>
 
 <script>
-// ─── Scrollbar ───────────────────────────────────────────
-const bar   = document.getElementById('scrollbar');
-const thumb = document.getElementById('scrollthumb');
+// ─── Strefa scrollowania po prawej (przezroczysta) ───────
+const bar = document.getElementById('scrollbar');
 let draggingBar = false, dragStartY = 0, dragStartScroll = 0;
 
-function updateThumb() {
-  const barH    = bar.clientHeight;
-  const docH    = document.documentElement.scrollHeight;
-  const scrollY = window.scrollY;
-  const ratio   = docH > barH ? barH / docH : 1;
-  const thumbH  = Math.max(40, barH * ratio);
-  const thumbTop = (scrollY / (docH - barH)) * (barH - thumbH);
-  thumb.style.height = thumbH + 'px';
-  thumb.style.top    = (isNaN(thumbTop) ? 0 : thumbTop) + 'px';
-}
+bar.addEventListener('touchstart', e => {
+  draggingBar = true;
+  dragStartY = e.touches[0].clientY;
+  dragStartScroll = window.scrollY;
+}, {passive: true});
 
-window.addEventListener('scroll', updateThumb, {passive: true});
-window.addEventListener('resize', updateThumb);
-updateThumb();
-
-// Kliknięcie na pasek — skocz do pozycji
-bar.addEventListener('click', e => {
-  if (e.target === thumb) return;
-  const rect    = bar.getBoundingClientRect();
-  const clickY  = e.clientY - rect.top;
-  const barH    = bar.clientHeight;
-  const docH    = document.documentElement.scrollHeight;
-  window.scrollTo({ top: (clickY / barH) * docH, behavior: 'smooth' });
-});
-
-// Przeciąganie kciuka
-thumb.addEventListener('mousedown',  e => { draggingBar = true; dragStartY = e.clientY; dragStartScroll = window.scrollY; e.preventDefault(); });
-thumb.addEventListener('touchstart', e => { draggingBar = true; dragStartY = e.touches[0].clientY; dragStartScroll = window.scrollY; }, {passive:true});
-
-window.addEventListener('mousemove', e => {
-  if (!draggingBar) return;
-  const dy   = e.clientY - dragStartY;
-  const docH = document.documentElement.scrollHeight;
-  const barH = bar.clientHeight;
-  window.scrollTo(0, dragStartScroll + (dy / barH) * docH);
-});
 window.addEventListener('touchmove', e => {
   if (!draggingBar) return;
   const dy   = e.touches[0].clientY - dragStartY;
   const docH = document.documentElement.scrollHeight;
   const barH = bar.clientHeight;
-  window.scrollTo(0, dragStartScroll + (dy / barH) * docH);
-}, {passive:true});
-window.addEventListener('mouseup',  () => { draggingBar = false; });
+  window.scrollTo(0, dragStartScroll - (dy / barH) * docH * 3);
+}, {passive: true});
+
 window.addEventListener('touchend', () => { draggingBar = false; });
 
-function updateStepbar() {} // zachowane dla kompatybilności
+function updateStepbar() {}
 
 // ─── Stan ───────────────────────────────────────────────
 let origImg = null;       // HTMLImageElement
