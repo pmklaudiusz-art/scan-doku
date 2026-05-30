@@ -17,28 +17,15 @@
       padding-right: 64px;
     }
 
-    /* Scrollbar 1cm po prawej */
+    /* Strefa scrollowania palcem po prawej */
     #scrollbar {
       position: fixed;
       right: 0;
       top: 0;
       bottom: 0;
       width: 38px;
-      background: #e4e6ed;
       z-index: 100;
-      cursor: pointer;
     }
-    #scrollthumb {
-      position: absolute;
-      left: 4px;
-      right: 4px;
-      background: #4361ee;
-      border-radius: 6px;
-      min-height: 40px;
-      transition: top 0.05s, height 0.05s;
-      cursor: grab;
-    }
-    #scrollthumb:active { cursor: grabbing; background: #2541c4; }
     h1 { font-size: 1.5rem; color: #1a1a2e; margin-bottom: 2px; }
     .subtitle { color: #888; font-size: 0.85rem; margin-bottom: 24px; }
     .card {
@@ -139,9 +126,7 @@
   </style>
 </head>
 <body>
-<div id="scrollbar">
-  <div id="scrollthumb"></div>
-</div>
+<div id="scrollbar"></div>
 
 <h1>📄 SkanDoku</h1>
 <p class="subtitle">Zdjęcie dokumentu → gotowy skan</p>
